@@ -15,8 +15,8 @@
     const { useState, useEffect, useRef } = React;
 
     const FIREBASE_URL = "https://sylvain-farewell-default-rtdb.europe-west1.firebasedatabase.app";
-    const PHOTO_URL = "Sylvain-Grande.jpg";
-    const ADMIN_HASH = "ec6ccda221d72e405f55250d7f3e54487145e741a74d00b0831397fd7d6b7e0b";
+    const PHOTO_URL = "Sylvain-Grande.jpg"; 
+    const ADMIN_HASH = "ec6ccda221d72e405f55250d7f3e54487145e741a74d00b0831397fd7d6b7e0b"; 
 
     const PAYFIT_BLUE = "#0B5FFF";
     const PAYFIT_DARK = "#001450";
@@ -122,10 +122,12 @@
 
       return (
         <div style={{ background: "linear-gradient(160deg,#F0F4FF 0%,#EEF3FF 60%,#DDEAFF 100%)", minHeight: "100vh", padding: "24px 24px 64px", fontFamily: "'Segoe UI',system-ui,sans-serif" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-            <div>{adminMode && <span style={{ fontSize: "12px", background: "#FEF3C7", color: "#92400E", padding: "4px 10px", borderRadius: "20px", fontWeight: 600 }}>🔐 Admin mode — click 🗑 to delete</span>}</div>
-            <span style={{ fontSize: "12px", color: online ? "#16A34A" : "#DC2626", fontWeight: 600 }}>{online ? "🟢 Live — shared with everyone" : "🔴 Connection error — retrying..."}</span>
-          </div>
+          {adminMode && (
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+              <span style={{ fontSize: "12px", background: "#FEF3C7", color: "#92400E", padding: "4px 10px", borderRadius: "20px", fontWeight: 600 }}>🔐 Admin mode — click 🗑 to delete</span>
+              <span style={{ fontSize: "12px", color: online ? "#16A34A" : "#DC2626", fontWeight: 600 }}>{online ? "🟢 Live" : "🔴 Connection error"}</span>
+            </div>
+          )}
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "40px", paddingTop: "8px" }}>
             <div style={{ background: "white", padding: "10px 10px 0", boxShadow: "0 8px 32px rgba(11,95,255,0.15)", transform: "rotate(-1.5deg)", marginBottom: "28px", display: "inline-block", width: "196px" }}>
               {PHOTO_URL ? <img src={PHOTO_URL} alt="Sylvain" style={{ width: "176px", height: "176px", objectFit: "cover", display: "block" }} /> : <div style={{ width: "176px", height: "176px", background: "linear-gradient(135deg,#0B5FFF,#5B9BFF)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "56px", fontWeight: 800, color: "white" }}>SG</div>}
