@@ -16,8 +16,8 @@
     const { useState, useEffect, useRef } = React;
 
     const FIREBASE_URL = "https://sylvain-farewell-default-rtdb.europe-west1.firebasedatabase.app";
-    const PHOTO_URL = "Sylvain-Grande.jpg"; // Replace with "sylvain.jpg" once uploaded
-    const ADMIN_HASH = "ec6ccda221d72e405f55250d7f3e54487145e741a74d00b0831397fd7d6b7e0b"; // SHA-256 hash — password not stored in plain text
+    const PHOTO_URL = "Sylvain-Grande.jpg"; 
+    const ADMIN_HASH = "ec6ccda221d72e405f55250d7f3e54487145e741a74d00b0831397fd7d6b7e0b"; 
 
     const PAYFIT_BLUE = "#0B5FFF";
     const PAYFIT_DARK = "#001450";
@@ -35,7 +35,8 @@
       const [showForm, setShowForm] = useState(false);
       const [sender, setSender] = useState("");
       const [text, setText] = useState("");
-      const [colorIdx, setColorIdx] = useState(0); // kept for compat but color is now random
+      const [colorIdx, setColorIdx] = useState(0);
+      const [pendingColor, setPendingColor] = useState(POST_IT_COLORS[0]);
       const [hoveredId, setHoveredId] = useState(null);
       const [error, setError] = useState("");
       const [lightboxSrc, setLightboxSrc] = useState(null);
@@ -107,9 +108,8 @@
       const handleAdd = async () => {
         if (!sender.trim() || !text.trim()) { setError("Please fill in both your name and your message."); return; }
         const date = new Date().toLocaleDateString("en-GB", { month: "long", year: "numeric" });
-        const randomColor = POST_IT_COLORS[Math.floor(Math.random() * POST_IT_COLORS.length)];
         const randomRotation = ROTATIONS[Math.floor(Math.random() * ROTATIONS.length)];
-        const payload = { sender: sender.trim(), text: text.trim(), color: randomColor, rotation: randomRotation, date, ...(uploadedPhoto ? { photo: uploadedPhoto } : {}) };
+        const payload = { sender: sender.trim(), text: text.trim(), color: pendingColor, rotation: randomRotation, date, ...(uploadedPhoto ? { photo: uploadedPhoto } : {}) };
         setPosting(true);
         try {
           const res = await fetch(FIREBASE_URL + "/kudos.json", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
@@ -143,10 +143,10 @@
             <p style={{ color: "#9CA3AF", fontSize: "14px", marginTop: "10px", fontStyle: "italic", textAlign: "center" }}>Leave a note to celebrate his incredible journey</p>
           </div>
           <div style={{ display: "flex", justifyContent: "center", marginBottom: "32px" }}>
-            {!showForm && <button onClick={() => setShowForm(true)} style={{ background: PAYFIT_BLUE, color: "white", padding: "12px 32px", borderRadius: "50px", fontSize: "16px", fontWeight: 600, boxShadow: "0 4px 16px rgba(11,95,255,0.35)", border: "none", cursor: "pointer" }}>+ Leave a message</button>}
+            {!showForm && <button onClick={() => { setPendingColor(POST_IT_COLORS[Math.floor(Math.random() * POST_IT_COLORS.length)]); setShowForm(true); }} style={{ background: PAYFIT_BLUE, color: "white", padding: "12px 32px", borderRadius: "50px", fontSize: "16px", fontWeight: 600, boxShadow: "0 4px 16px rgba(11,95,255,0.35)", border: "none", cursor: "pointer" }}>+ Leave a message</button>}
           </div>
           {showForm && (
-            <div style={{ maxWidth: "480px", margin: "0 auto 40px", background: "#FFF9C4", padding: "28px", boxShadow: "5px 5px 18px rgba(0,0,0,0.12)", transform: "rotate(-0.5deg)", position: "relative" }}>
+            <div style={{ maxWidth: "480px", margin: "0 auto 40px", background: pendingColor, padding: "28px", boxShadow: "5px 5px 18px rgba(0,0,0,0.12)", transform: "rotate(-0.5deg)", position: "relative" }}>
               <div style={{ width: "14px", height: "14px", background: PAYFIT_BLUE, borderRadius: "50%", margin: "0 auto 20px", boxShadow: "0 3px 8px rgba(11,95,255,0.4)" }} />
               <button onClick={handleCancel} style={{ position: "absolute", top: "12px", right: "14px", background: "transparent", border: "none", cursor: "pointer", color: "#9CA3AF", fontSize: "18px" }}>✕</button>
               <input placeholder="Your name" value={sender} onChange={e => setSender(e.target.value)} style={{ width: "100%", border: "none", borderBottom: "2px solid rgba(11,95,255,0.25)", background: "transparent", fontSize: "16px", fontWeight: 600, padding: "6px 0 8px", marginBottom: "16px", outline: "none", color: PAYFIT_DARK, fontFamily: "inherit", boxSizing: "border-box" }} />
