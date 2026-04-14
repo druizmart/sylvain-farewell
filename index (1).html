@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Farewell Sylvain 💙</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    const FIREBASE_URL = "https://sylvain-farewell-default-rtdb.europe-west1.firebasedatabase.app";
+    // Optional: set PHOTO_URL to a public image URL of Sylvain
+    // e.g. const PHOTO_URL = "https://i.imgur.com/xxxxx.jpg";
+    const PHOTO_URL = null;
+
+    const PAYFIT_BLUE = "#0B5FFF";
+    const PAYFIT_DARK = "#001450";
+    const POST_IT_COLORS = ["#FFF9C4","#F8BBD9","#B3E5FC","#C8E6C9","#FFE0B2","#E1BEE7","#DCEDC8","#FFCCBC"];
+    const ROTATIONS = [-3,-1.5,2,-2.5,1,3,-1,2.5,-0.5,1.8];
+
+    function KudosBoard() {
+      const [messages, setMessages] = useState([]);
+      const [showForm, setShowForm] = useState(false);
+      const [sender, setSender] = useState("");
+      const [text, setText] = useState("");
+      const [colorIdx, setColorIdx] = useState(0);
+      const [hoveredId, setHoveredId] = useState(null);
+      const [error, setError] = useState("");
+      const [lightboxSrc, setLightboxSrc] = useState(null);
+      const [uploadedPhoto, setUploadedPhoto] = useState(null);
+      const [loading, setLoading] = useState(true);
+      const [posting, setPosting] = useState(false);
+      const [online, setOnline] = useState(true);
+      const fileInputRef = useRef(null);
+
+      const fetchMessages = async () => {
+        try {
+          const res = await fetch(FIREBASE_URL + "/kudos.json");
+          const data = await res.json();
+          if (data && typeof data === "object") {
+            const loaded = Object.entries(data).map(([id, val]) => ({ id, ...val }));
+            loaded.sort((a, b) => b.id.localeCompare(a.id));
+            setMessages(loaded);
+          } else { setMessages([]); }
+          setOnline(true);
+        } catch { setOnline(false); }
+        finally { setLoading(false); }
+      };
+
+      useEffect(() => {
+        fetchMessages();
+        const interval = setInterval(fetchMessages, 10000);
+        return () => clearInterval(interval);
+      }, []);
+
+      const handlePhotoUpload = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => setUploadedPhoto(ev.target.result);
+        reader.readAsDataURL(file);
+      };
+
+      const handleAdd = async () => {
+        if (!sender.trim() || !text.trim()) { setError("Please fill in both your name and your message."); return; }
+        const date = new Date().toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+        const payload = { sender: sender.trim(), text: text.trim(), color: POST_IT_COLORS[colorIdx % POST_IT_COLORS.length], rotation: ROTATIONS[messages.length % ROTATIONS.length], date, ...(uploadedPhoto ? { photo: uploadedPhoto } : {}) };
+        setPosting(true);
+        try {
+          const res = await fetch(FIREBASE_URL + "/kudos.json", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+          const data = await res.json();
+          setMessages(prev => [{ id: data.name, ...payload }, ...prev]);
+          setColorIdx(c => c + 1); setSender(""); setText(""); setUploadedPhoto(null); setError(""); setShowForm(false);
+          if (fileInputRef.current) fileInputRef.current.value = "";
+        } catch { setError("Failed to post. Please try again."); }
+        finally { setPosting(false); }
+      };
+
+      const handleCancel = () => { setSender(""); setText(""); setUploadedPhoto(null); setError(""); setShowForm(false); if (fileInputRef.current) fileInputRef.current.value = ""; };
+
+      const s = { btn: { background: PAYFIT_BLUE, color: "white", padding: "12px 32px", borderRadius: "50px", fontSize: "16px", fontWeight: 600, boxShadow: "0 4px 16px rgba(11,95,255,0.35)", border: "none", cursor: "pointer" } };
+
+      return (
+        <div style={{ background: "linear-gradient(160deg,#F0F4FF 0%,#EEF3FF 60%,#DDEAFF 100%)", minHeight: "100vh", padding: "24px 24px 64px", fontFamily: "'Segoe UI',system-ui,sans-serif" }}>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "8px" }}>
+            <span style={{ fontSize: "12px", color: online ? "#16A34A" : "#DC2626", fontWeight: 600 }}>{online ? "🟢 Live — shared with everyone" : "🔴 Connection error — retrying..."}</span>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "40px", paddingTop: "8px" }}>
+            <div style={{ background: "white", padding: "10px 10px 0", boxShadow: "0 8px 32px rgba(11,95,255,0.15)", transform: "rotate(-1.5deg)", marginBottom: "28px", display: "inline-block", width: "196px" }}>
+              {PHOTO_URL ? <img src={PHOTO_URL} alt="Sylvain" style={{ width: "176px", height: "176px", objectFit: "cover", display: "block" }} /> : <div style={{ width: "176px", height: "176px", background: "linear-gradient(135deg,#0B5FFF,#5B9BFF)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "56px", fontWeight: 800, color: "white" }}>SG</div>}
+              <div style={{ height: "52px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <p style={{ fontFamily: "Georgia,serif", fontStyle: "italic", color: PAYFIT_BLUE, fontSize: "14px" }}>Thanks for everything 🙌🏻</p>
+              </div>
+            </div>
+            <h1 style={{ fontSize: "clamp(28px,5vw,46px)", fontWeight: 800, color: PAYFIT_DARK, letterSpacing: "-1px", textAlign: "center", lineHeight: 1.1 }}>Farewell, <span style={{ color: PAYFIT_BLUE }}>Sylvain Grande</span> 💙</h1>
+            <p style={{ color: "#3B6FCC", fontSize: "17px", marginTop: "6px", fontWeight: 500 }}>Chief Product Officer · PayFit</p>
+            <p style={{ color: "#9CA3AF", fontSize: "14px", marginTop: "10px", fontStyle: "italic", textAlign: "center" }}>Leave a note to celebrate his incredible journey</p>
+          </div>
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: "32px" }}>
+            {!showForm && <button onClick={() => setShowForm(true)} style={s.btn}>+ Leave a message</button>}
+          </div>
+          {showForm && (
+            <div style={{ maxWidth: "480px", margin: "0 auto 40px", background: "#FFF9C4", padding: "28px", boxShadow: "5px 5px 18px rgba(0,0,0,0.12)", transform: "rotate(-0.5deg)", position: "relative" }}>
+              <div style={{ width: "14px", height: "14px", background: PAYFIT_BLUE, borderRadius: "50%", margin: "0 auto 20px", boxShadow: "0 3px 8px rgba(11,95,255,0.4)" }} />
+              <button onClick={handleCancel} style={{ position: "absolute", top: "12px", right: "14px", background: "transparent", border: "none", cursor: "pointer", color: "#9CA3AF", fontSize: "18px" }}>✕</button>
+              <input placeholder="Your name" value={sender} onChange={e => setSender(e.target.value)} style={{ width: "100%", border: "none", borderBottom: "2px solid rgba(11,95,255,0.25)", background: "transparent", fontSize: "16px", fontWeight: 600, padding: "6px 0 8px", marginBottom: "16px", outline: "none", color: PAYFIT_DARK, fontFamily: "inherit", boxSizing: "border-box" }} />
+              <textarea placeholder="Write your message to Sylvain..." value={text} onChange={e => setText(e.target.value)} rows={4} style={{ width: "100%", border: "none", background: "transparent", fontSize: "15px", outline: "none", resize: "none", color: "#374151", lineHeight: "1.6", fontFamily: "inherit", boxSizing: "border-box" }} />
+              <div style={{ marginTop: "16px" }}>
+                <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoUpload} style={{ display: "none" }} id="photo-upload" />
+                {uploadedPhoto ? (
+                  <div style={{ position: "relative", display: "inline-block" }}>
+                    <img src={uploadedPhoto} alt="preview" style={{ width: "80px", height: "80px", objectFit: "cover", border: "3px solid white", boxShadow: "2px 2px 8px rgba(0,0,0,0.15)" }} />
+                    <button onClick={() => { setUploadedPhoto(null); if (fileInputRef.current) fileInputRef.current.value = ""; }} style={{ position: "absolute", top: "-8px", right: "-8px", background: "#EF4444", border: "none", borderRadius: "50%", width: "20px", height: "20px", cursor: "pointer", color: "white", fontSize: "12px" }}>✕</button>
+                  </div>
+                ) : (
+                  <label htmlFor="photo-upload" style={{ display: "inline-flex", alignItems: "center", gap: "6px", cursor: "pointer", fontSize: "13px", color: PAYFIT_BLUE, fontWeight: 600, padding: "6px 12px", borderRadius: "6px", border: "1.5px dashed " + PAYFIT_BLUE, background: "rgba(11,95,255,0.04)" }}>📷 Add a photo</label>
+                )}
+              </div>
+              {error && <p style={{ color: "#EF4444", fontSize: "13px", marginTop: "8px" }}>{error}</p>}
+              <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "18px", borderTop: "1px solid rgba(0,0,0,0.08)", paddingTop: "16px" }}>
+                <button onClick={handleCancel} style={{ padding: "8px 16px", borderRadius: "8px", border: "1px solid #e5e7eb", background: "white", cursor: "pointer", fontFamily: "inherit" }}>Cancel</button>
+                <button onClick={handleAdd} disabled={posting} style={{ background: PAYFIT_BLUE, color: "white", padding: "8px 16px", borderRadius: "8px", fontWeight: 600, border: "none", cursor: posting ? "not-allowed" : "pointer", fontFamily: "inherit", opacity: posting ? 0.7 : 1 }}>{posting ? "Posting..." : "📌 Post it!"}</button>
+              </div>
+            </div>
+          )}
+          {loading ? (
+            <div style={{ display: "flex", justifyContent: "center", color: PAYFIT_BLUE, marginTop: "40px", fontSize: "15px" }}>Loading messages...</div>
+          ) : (
+            <div style={{ columns: "3 280px", gap: "28px", maxWidth: "1100px", margin: "0 auto" }}>
+              {messages.map(msg => (
+                <div key={msg.id} style={{ background: msg.color, padding: "20px 18px 16px", marginBottom: "28px", boxShadow: hoveredId === msg.id ? "8px 8px 24px rgba(0,0,0,0.18)" : "4px 4px 14px rgba(0,0,0,0.1)", transform: hoveredId === msg.id ? "rotate(0deg) scale(1.04)" : "rotate(" + msg.rotation + "deg)", breakInside: "avoid", display: "inline-block", width: "100%", transition: "transform 0.2s, box-shadow 0.2s", boxSizing: "border-box" }} onMouseEnter={() => setHoveredId(msg.id)} onMouseLeave={() => setHoveredId(null)}>
+                  <div style={{ width: "12px", height: "12px", background: PAYFIT_BLUE, borderRadius: "50%", margin: "0 auto 14px", boxShadow: "0 2px 6px rgba(11,95,255,0.4)" }} />
+                  {msg.photo && (
+                    <div style={{ display: "flex", justifyContent: "center", marginBottom: "14px" }}>
+                      <div onClick={e => { e.stopPropagation(); setLightboxSrc(msg.photo); }} style={{ background: "white", padding: "8px 8px 28px", boxShadow: "3px 4px 12px rgba(0,0,0,0.18)", transform: "rotate(1.5deg)", display: "inline-block", cursor: "zoom-in", transition: "transform 0.2s" }} onMouseEnter={e => e.currentTarget.style.transform = "rotate(0deg) scale(1.06)"} onMouseLeave={e => e.currentTarget.style.transform = "rotate(1.5deg)"}>
+                        <img src={msg.photo} alt="photo" style={{ width: "120px", height: "120px", objectFit: "cover", display: "block" }} />
+                      </div>
+                    </div>
+                  )}
+                  <p style={{ fontSize: "15px", color: PAYFIT_DARK, lineHeight: "1.65", marginBottom: "14px", whiteSpace: "pre-wrap" }}>{msg.text}</p>
+                  <div style={{ borderTop: "1px solid rgba(0,0,0,0.1)", paddingTop: "10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <p style={{ fontWeight: 700, color: PAYFIT_BLUE, fontSize: "13px" }}>— {msg.sender}</p>
+                    <p style={{ fontSize: "11px", color: "#9CA3AF" }}>{msg.date}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {!loading && messages.length === 0 && !showForm && <p style={{ textAlign: "center", color: "#9CA3AF", fontSize: "14px", fontStyle: "italic", marginTop: "24px" }}>Be the first to leave a message for Sylvain! 🚀</p>}
+          <p style={{ textAlign: "center", color: "#93B4E8", fontSize: "13px", marginTop: "40px" }}>Made with 💙 by the PayFit team</p>
+          {lightboxSrc && (
+            <div onClick={() => setLightboxSrc(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, cursor: "zoom-out", backdropFilter: "blur(4px)" }}>
+              <div onClick={e => e.stopPropagation()} style={{ background: "white", padding: "14px 14px 52px", boxShadow: "0 24px 64px rgba(0,0,0,0.4)", transform: "rotate(-1deg)", maxWidth: "90vw" }}>
+                <img src={lightboxSrc} alt="enlarged" style={{ display: "block", maxWidth: "70vw", maxHeight: "70vh", objectFit: "contain" }} />
+                <p style={{ textAlign: "center", marginTop: "12px", fontFamily: "Georgia,serif", fontStyle: "italic", color: PAYFIT_BLUE, fontSize: "14px" }}>Click outside to close</p>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(KudosBoard));
+  </script>
+</body>
+</html>
