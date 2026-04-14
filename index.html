@@ -4,6 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Farewell Sylvain 💙</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💙</text></svg>">
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -15,12 +16,12 @@
     const { useState, useEffect, useRef } = React;
 
     const FIREBASE_URL = "https://sylvain-farewell-default-rtdb.europe-west1.firebasedatabase.app";
-    const PHOTO_URL = "Sylvain-Grande.jpg"; 
-    const ADMIN_HASH = "ec6ccda221d72e405f55250d7f3e54487145e741a74d00b0831397fd7d6b7e0b"; 
+    const PHOTO_URL = ; // Replace with "sylvain.jpg" once uploaded
+    const ADMIN_HASH = "ec6ccda221d72e405f55250d7f3e54487145e741a74d00b0831397fd7d6b7e0b"; // SHA-256 hash — password not stored in plain text
 
     const PAYFIT_BLUE = "#0B5FFF";
     const PAYFIT_DARK = "#001450";
-    const POST_IT_COLORS = ["#FFF9C4","#F8BBD9","#B3E5FC","#C8E6C9","#FFE0B2","#E1BEE7","#DCEDC8","#FFCCBC"];
+    const POST_IT_COLORS = ["#FFF9C4","#B3E5FC","#C8E6C9","#FFE0B2","#E1BEE7","#FFCCBC"];
     const ROTATIONS = [-3,-1.5,2,-2.5,1,3,-1,2.5,-0.5,1.8];
 
     async function verifyPassword(input) {
@@ -34,7 +35,7 @@
       const [showForm, setShowForm] = useState(false);
       const [sender, setSender] = useState("");
       const [text, setText] = useState("");
-      const [colorIdx, setColorIdx] = useState(0);
+      const [colorIdx, setColorIdx] = useState(0); // kept for compat but color is now random
       const [hoveredId, setHoveredId] = useState(null);
       const [error, setError] = useState("");
       const [lightboxSrc, setLightboxSrc] = useState(null);
@@ -106,7 +107,9 @@
       const handleAdd = async () => {
         if (!sender.trim() || !text.trim()) { setError("Please fill in both your name and your message."); return; }
         const date = new Date().toLocaleDateString("en-GB", { month: "long", year: "numeric" });
-        const payload = { sender: sender.trim(), text: text.trim(), color: POST_IT_COLORS[colorIdx % POST_IT_COLORS.length], rotation: ROTATIONS[messages.length % ROTATIONS.length], date, ...(uploadedPhoto ? { photo: uploadedPhoto } : {}) };
+        const randomColor = POST_IT_COLORS[Math.floor(Math.random() * POST_IT_COLORS.length)];
+        const randomRotation = ROTATIONS[Math.floor(Math.random() * ROTATIONS.length)];
+        const payload = { sender: sender.trim(), text: text.trim(), color: randomColor, rotation: randomRotation, date, ...(uploadedPhoto ? { photo: uploadedPhoto } : {}) };
         setPosting(true);
         try {
           const res = await fetch(FIREBASE_URL + "/kudos.json", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
